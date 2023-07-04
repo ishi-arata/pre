@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ja">
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/destyle.css@1.0.15/destyle.css"/>
+        <link rel="stylesheet" href="css/style.css">
+    </head>
+    <body>
+        <% station.forEach(station => { %>
+            <h1 id="stationName"><%= station.station_name%></h1>
+        <% }); %>
+
+        <div class="tab_Box">
+            <p id="tab">
+            <% for (var i = 0; i < gate.length; i++) { %>
+                <a href="#tab_number<%= gate[i]['gate_id'] %>"><input type="button" id="<%= i %>" class="direction" onClick="nameBtn(event)" value="<%= gate[i]['station_gate'] %>" name="tab"></a>
+                <!-- <%= gate[i]['gate_id'],  %> -->
+                <% } %>
+            </p>
+        </div>
+        <div id="contents">
+            <% <!-- DBの中身を分別する -->
+            var flg_man_cnt = [];
+            var flg_woman_cnt = [];
+            var flg_multipurpose_cnt = [];
+            for (var i = 0; i < flg.length; i++){
+                if (flg[i]['toilet_type'] == '男性'){
+                    flg_man_cnt.push(flg[i]);
+                }else if(flg[i]['toilet_type'] == "女性"){
+                    flg_woman_cnt.push(flg[i]);
+                }else{
+                    flg_multipurpose_cnt.push(flg[i]);
+                }
+            }
+            for (var i = 0; i < gate.length; i++) { %>
+                <div id="tab_number<%= gate[i]['gate_id'] %>" class="tab_contents">
+                    <div class="toilet_contents">
+                        <div class="use_contents">
+                            <div>
+                                <p><a href="#man"><input type="button" class="toilet" value="男性" style="background-color: #77A5F6;"></a></p>
+                            </div>
+                            <div class="use_status_contents" id="use_status_man_vacant">空きを確認中……</div>
+                            <div class="use_status_contents" id="use_status_man_use">使用中を確認中……</div>
+                        </div>
+                        <div class="rooms_contents">
+                            <% for (var j = 0; j < flg_man_cnt.length; j++){ %>
+                                <div class="room_status_man<%= j %>" id="roomStatus_man"><p>使用状況確認中………</p></div>
+                            <% } %>
+                        </div>
+                    </div>
+                    <div class="toilet_contents">
+                        <div class="use_contents">
+                            <div>
+                                <p><a href="#woman"><input type="button" class="toilet" value="女性" style="background-color: #F67D77;"></a></p>
+                            </div>
+                            <div class="use_status_contents" id="use_status_woman_vacant">空きを確認中……</div>
+                            <div class="use_status_contents" id="use_status_woman_use">使用中を確認中……</div>
+                        </div>
+                        <div class="rooms_contents">
+                            <% for (var j = 0; j < flg_woman_cnt.length; j++){ %>
+                                <div class="room_status_woman" id="roomStatus_woman" value="<%= j %>"><p>使用状況確認中………</p></div>
+                            <% } %>
+                        </div>
+                    </div>
+                    <div class="toilet_contents">
+                        <div class="use_contents">
+                            <div>
+                                <p><a href="#multipurpose"><input type="button" class="toilet" value="多目的" style="background-color: #AFF677;"></a></p>
+                            </div>
+                            <div class="use_status_contents" id="use_status_multipurpose_vacant">空きを確認中……</div>
+                            <div class="use_status_contents" id="use_status_multipurpose_use">使用中を確認中……</div>
+                        </div>
+                        <div class="rooms_contents">
+                            <% for (var j = 0; j < flg_multipurpose_cnt.length; j++){ %>
+                                <div class="room_status_multipurpose" id="roomStatus_multipurpose" value="<%= j %>"><p>使用状況確認中……</p></div>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            <% } %>
+        </div>
+        
+        <script src="https://cdn.socket.io/4.5.4/socket.io.min.js" integrity="sha384-/KNQL8Nu5gCHLqwqfQjA689Hhoqgi2S84SNUxC3roTe4EhJ9AfLkp8QiQcU8AMzI" crossorigin="anonymous"></script>
+        <script>
+            const socket = io();
+            //idを取得し変数に変換
+            const stationName = document.getElementById("stationName");
+            const stNameBase = stationName.textContent;
+            //空き　使用中の文字を取得
+            var use_status_man_vacant = document.getElementById("use_status_man_vacant");
+            var use_status_man_use = document.getElementById("use_status_man_use");
+            var use_status_woman_vacant = document.getElementById("use_status_woman_vacant");
+            var use_status_woman_use = document.getElementById("use_status_woman_use");
+            var use_status_multipurpose_vacant = document.getElementById("use_status_multipurpose_vacant");
+            var use_status_multipurpose_use = document.getElementById("use_status_multipurpose_use");
+
+            var roomStatus_man = document.getElementById("roomStatus_man");
+            var roomStatus_woman = document.getElementById("roomStatus_woman");
+            var roomStatus_multipurpose = document.getElementById("roomStatus_multipurpose");
+            var tabs = document.getElementById('tab').getElementsByTagName('a');
+            var pages = document.getElementById('contents').getElementsByClassName('tab_contents');
+            // console.log(roomStatus_man_id);
+            // 男性女性多目的トイレの使用状況及び個数確認
+            // 男性
+            var cnt_man_0 = 0;
+            var cnt_man_1 = 0;
+
+            // 女性
+            var cnt_woman_0 = 0;
+            var cnt_woman_1 = 0;
+
+            // <多目的
+            var cnt_multipurpose_0 = 0;
+            var cnt_multipurpose_1 = 0;
+
+            function nameBtn(e) {
+                var value = e.target.id;
+                console.log(value);
+                // console.log(value);
+                let nowTab = document.getElementById(value).value;
+                stationName.innerText = stNameBase + "（" + nowTab + "）";
+            }
+            
+            //タブの切り替え処理
+            function changeTab() {
+                //href属性値から対象のid名を抜き出す
+                var targetid = this.href.substring(this.href.indexOf('#')+1,this.href.length);
+                
+                //指定のタブページだけを表示する
+                for(var i=0; i<pages.length; i++) {
+                    if( pages[i].id != targetid ) {
+                        pages[i].style.display = "none";
+                    }
+                    else {
+                        pages[i].style.display = "block";
+                    }
+                }
+                
+                //クリックされたタブを前面に表示する
+                for(var i=0; i<tabs.length; i++) {
+                    tabs[i].style.zIndex = "0";
+                }
+                this.style.zIndex = "10";
+
+                //ページ遷移しないようにfalseを返す
+                return false;
+            }
+            //すべてのタブに対して、クリック時にchangeTab関数が実行されるよう指定する
+            for(var i=0; i<tabs.length; i++) {
+                tabs[i].onclick = changeTab;
+            }
+            
+            //最初は先頭のタブを選択しておく
+            tabs[0].onclick();
+            
+            // window.onload = function() {
+            //     var room_Status_man = document.getElementsByClassName("room_Status_man");
+            // console.log(room_Status_man);
+            // }
+
+            socket.on('use_status', (data) => {
+                // 男性女性多目的トイレの使用状況及び個数確認
+                // 男性
+                var cnt_man_0 = 0;
+                var cnt_man_1 = 0;
+
+                // 女性
+                var cnt_woman_0 = 0;
+                var cnt_woman_1 = 0;
+
+                // 多目的
+                var cnt_multipurpose_0 = 0;
+                var cnt_multipurpose_1 = 0;
+
+                var flg_man_cnt = [];
+                var flg_woman_cnt = [];
+                var flg_multipurpose_cnt = [];
+                // console.log(flg_man_cnt[1]['toilet_flg']);
+                data.flg.forEach((use_status) => {
+                    if (use_status['toilet_type'] == '男性'){
+                        flg_man_cnt.push(use_status);
+                    }else if(use_status['toilet_type'] == "女性"){
+                        flg_woman_cnt.push(use_status);
+                    }else{
+                        flg_multipurpose_cnt.push(use_status);
+                    }
+
+                    // if(flg_man_cnt0[i]['toilet_flg'] == 0){
+                    //     roomStatus_man.innerText = "空き";
+                    // }else if(flg_man_cnt0[i]['toilet_flg'] == 1){
+                    //     roomStatus_man.innerText = "使用中";
+                    // }
+
+                    // if(flg_man_cnt0[i]['toilet_flg'] == 0){
+                    //     roomStatus_woman.innerText = "空き";
+                    // }else if(flg_man_cnt0[i]['toilet_flg'] == 1){
+                    //     roomStatus_woman.innerText = "使用中";
+                    // }
+
+                    if(use_status.toilet_type == '男性' && use_status.toilet_flg == 0){
+                        cnt_man_0++;
+                        use_status_man_vacant.innerText = "空き：" + cnt_man_0;
+                        roomStatus_man.innerText = "空き";
+                        roomStatus_man.style.background = '#0000ff';
+                    }else if(use_status.toilet_type == '男性' && use_status.toilet_flg == 1){
+                        cnt_man_1++;
+                        use_status_man_use.innerText = "使用中：" + cnt_man_1;
+                        roomStatus_man.innerText = "使用中";
+                        roomStatus_man.style.background = '#ff0000';
+                    }else if(use_status.toilet_type == '女性' && use_status.toilet_flg == 0){
+                        cnt_woman_0++;
+                        use_status_woman_vacant.innerText = "空き：" + cnt_woman_0;
+                        roomStatus_woman.innerText = "空き";
+                        roomStatus_woman.style.background = '#0000ff';
+                    }else if(use_status.toilet_type == '女性' && use_status.toilet_flg == 1){
+                        cnt_woman_1++;
+                        use_status_woman_use.innerText = "使用中：" + cnt_woman_1;
+                        roomStatus_woman.innerText = "使用中";
+                        roomStatus_woman.style.background = '#ff0000';
+                    }else if(use_status.toilet_type == '多目的' && use_status.toilet_flg == 0){
+                        cnt_multipurpose_0++;
+                        use_status_multipurpose_vacant.innerText = "空き：" + cnt_multipurpose_0;
+                        roomStatus_multipurpose.innerText = "空き";
+                        roomStatus_multipurpose.style.background = '#0000ff';
+                    }else{
+                        cnt_multipurpose_1++;
+                        use_status_multipurpose_use.innerText = "使用中：" + cnt_multipurpose_1;
+                        roomStatus_multipurpose.innerText = "使用中";
+                        roomStatus_multipurpose.style.background = '#ff0000';
+                    }
+                });
+            });
+        </script>
+    </body>
+</html>

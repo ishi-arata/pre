@@ -1,0 +1,135 @@
+@charset "UTF-8";
+
+/* 検索バー */
+.ui-autocomplete {
+    max-height: 200px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 20px;
+}
+
+.search {
+    box-sizing: border-box;
+    text-align: center;
+    margin-top: 10%;
+    overflow-y: scroll;
+}
+
+.search input[type="text"] {
+    border: 1px solid #999;
+    padding: 3px 5px;
+    border-radius: 20px;
+    height: 2.0em;
+    width: 400px;
+    overflow: hidden;
+}
+
+.search input[type="text"]:focus {
+    outline: 0;
+}
+
+.search input[type="submit"] {
+    cursor: pointer;
+    font-family: FontAwesome;
+    font-size: 1.3em;
+    border: none;
+    background: none;
+    color: #3879D9;
+    outline: none;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+h3{
+    text-align: center;
+}
+
+/* toilet */
+h1 {
+    text-align: center;
+    font-size: 32px;
+}
+
+
+
+.direction {
+    width: 100px;
+    font-size: 24px;
+    border-radius: 0.75em 0.75em 0 0; /* 枠線の左上角と右上角だけを丸く */
+    border: solid;
+    text-decoration: none;            /* リンクの下線を消す */
+    color: #000;
+    background-color: #dcdcdc;
+    font-weight: bold;                /* 太字 */
+    position: relative;               /* JavaScriptでz-indexを調整するために必要 */
+}
+.direction:hover {
+    opacity: 0.5; /* 50％ほど透明にする */
+}
+
+.tab_Box {
+    background-color: white; /* 背景色：白色 */
+    position: relative;      /* z-indexを調整するために必要 */
+    z-index: 0;              /* 重なり順序を「最も背面」にするため */
+    border-bottom: 3px solid black; 
+    padding: 0 !important; 
+}
+
+.tab_Box a {
+    text-align: center;
+}
+
+.toilet_contents{
+    margin: 2%;
+}
+
+.toilet_contents a{
+    text-align: center;
+}
+
+.use_contents{
+    display: flex;
+}
+
+.use_status_contents{
+    font-size: 18px;
+    margin-top: 0.5%;
+    margin-left: 0.5%;
+    text-align: center;
+}
+
+.rooms_contents{
+    display: flex;
+    flex-wrap:wrap;
+    margin-top: 1%;
+}
+.rooms_contents div {
+    width: 22%;
+    height: 100px;
+    margin:0.75% 1.5%;
+    top: 50%;
+    text-align: center;
+    border: 2px #000 solid;
+}
+.toilet {
+    width: 100px;
+    font-size: 24px;
+    border: 2px #000 solid;
+    border-radius: 100vh;
+    text-decoration: none;            /* リンクの下線を消す */
+    color: #000;
+    font-weight: bold;                /* 太字 */
+    position: relative;               /* JavaScriptでz-indexを調整するために必要 */
+}
+
+
+#roomStatus p{
+    margin: auto;
+    width: 100%;
+    height: 100%; 
+}
+
+#room{
+    display: flex;
+    visibility: hidden;
+}
